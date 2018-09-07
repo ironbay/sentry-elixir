@@ -29,12 +29,15 @@ defmodule Sentry.Logger do
   The other solution is to check for existing handlers before trying to add another.  Example:
 
   ```elixir
+  # :error_logger.start() # this may be necessary on Elixir 1.6/OTP 21
   if !(Sentry.Logger in :gen_event.which_handlers(:error_logger)) do
     :ok = :error_logger.add_report_handler(Sentry.Logger)
   end
   ```
 
   With this solution, if a `Sentry.Logger` handler is already running, it will not add another.  One can add the code to each application, and there will only ever be one handler created.  This solution is safer, but slightly more complex to manage.
+
+  If you are running on Elixir 1.6 and Erlang/OTP 21, it may be necessary to call `:error_logger.start/1` prior to calling `:gen_event.which_handlers/1`
   """
 
   @behaviour :gen_event
