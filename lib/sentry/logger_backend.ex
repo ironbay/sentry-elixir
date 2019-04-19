@@ -29,19 +29,12 @@ defmodule Sentry.LoggerBackend do
   end
 
   def handle_event({_level, _gl, {Logger, _msg, _ts, meta}}, state) do
+    Logger.metadata(meta)
     case Keyword.get(meta, :crash_reason) do
       {reason, stacktrace} ->
-        extra =
-          meta
-          |> Keyword.delete(:stacktrace)
-          |> Keyword.delete(:event_source)
-          |> Keyword.delete(:crash_reason)
-          |> Enum.into(%{})
-
         opts =
           Keyword.put([], :event_source, :logger)
           |> Keyword.put(:stacktrace, stacktrace)
-          |> Keyword.put(:extra, extra)
 
         Sentry.capture_exception(reason, opts)
 
