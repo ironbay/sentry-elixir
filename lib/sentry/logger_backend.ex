@@ -36,6 +36,7 @@ defmodule Sentry.LoggerBackend do
           |> Keyword.delete(:stacktrace)
           |> Keyword.delete(:event_source)
           |> Keyword.delete(:crash_reason)
+          |> Enum.into(%{})
 
         opts =
           Keyword.put([], :event_source, :logger)
