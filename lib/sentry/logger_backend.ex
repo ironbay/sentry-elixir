@@ -29,17 +29,26 @@ defmodule Sentry.LoggerBackend do
   end
 
   def handle_event({_level, _gl, {Logger, _msg, _ts, meta}}, state) do
-    Logger.metadata(meta)
+    opts = [
+      extra:
+        meta
+        |> Stream.filter(fn {_key, value} ->
+          is_binary(value) || is_atom(value) || is_number(value)
+        end)
+        |> Enum.into(%{})
+    ]
+
     case Keyword.get(meta, :crash_reason) do
       {reason, stacktrace} ->
         opts =
-          Keyword.put([], :event_source, :logger)
+          opts
+          |> Keyword.put(:event_source, :logger)
           |> Keyword.put(:stacktrace, stacktrace)
 
         Sentry.capture_exception(reason, opts)
 
       reason when is_atom(reason) and not is_nil(reason) ->
-        Sentry.capture_exception(reason, event_source: :logger)
+        Sentry.capture_exception(reason, [{:event_source, :logger} | opts])
 
       _ ->
         :ok
